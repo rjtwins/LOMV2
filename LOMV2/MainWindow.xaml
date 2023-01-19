@@ -1,0 +1,173 @@
+﻿<Window x:Class="LOM.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LOM"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
+        xmlns:src="clr-namespace:LOM.Converters"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="400" Width="1050" MinWidth="1050">
+    <Window.Resources>
+        <src:StringBoolDataConverter x:Key="dateConverter"/>
+        <Style TargetType="Button" x:Key="RoundButton">
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="3" />
+                    <Setter Property="Margin" Value="5,5,5,5" />
+                    <Setter Property="UseLayoutRounding" Value="True" />
+                    <Setter Property="Padding" Value="5,5,5,5" />
+                </Style>
+            </Style.Resources>
+        </Style>
+    </Window.Resources>
+    <DockPanel Drop="Window_Drop" AllowDrop="True">
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Select _Main Mods Folder" Click="Select_Main_Mods_Folder"/>
+            <MenuItem Header="Add _Secondary Mods Folder" Click="Add_Secondary_Mods_Folder"/>
+            <MenuItem Header="Info"/>
+        </Menu>
+        <StackPanel DockPanel.Dock="Top">
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Main Folder"/>
+                <Label x:Name="MainFolderLabel" Content="{Binding MainModsFolder}"></Label>
+            </StackPanel>
+        </StackPanel>
+        <Grid DockPanel.Dock="Top" Margin="2,4,2,2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150">
+                </ColumnDefinition>
+                <ColumnDefinition Width="*">
+                </ColumnDefinition>
+                <ColumnDefinition Width="400">
+                </ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto">
+                </RowDefinition>
+                <RowDefinition Height="*">
+                </RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid Grid.Column="0" Grid.Row="1" Margin="2,30,2,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto">
+                    </ColumnDefinition>
+                    <ColumnDefinition Width="auto">
+                    </ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto">
+                    </RowDefinition>
+                    <RowDefinition Height="auto">
+                    </RowDefinition>
+                    <RowDefinition Height="auto">
+                    </RowDefinition>
+                    <RowDefinition Height="auto">
+                    </RowDefinition>
+                    <RowDefinition Height="auto">
+                    </RowDefinition>
+                    <RowDefinition Height="auto">
+                    </RowDefinition>
+                </Grid.RowDefinitions>
+                <Button Style="{DynamicResource RoundButton}" Grid.Column="0" Grid.ColumnSpan="99" Click="Refresh_Button_Click" >Refresh</Button>
+                <Button Style="{DynamicResource RoundButton}" Grid.Column="0" Grid.Row="1" Click="Upp_Button_Click">Up</Button>
+                <Button Style="{DynamicResource RoundButton}" Grid.Column="0" Grid.Row="2" Click="Down_Button_Click">Down</Button>
+                <Button Style="{DynamicResource RoundButton}" Grid.Column="0" Grid.Row="3" Click="Apply">Apply</Button>
+                <Button Style="{DynamicResource RoundButton}" Grid.Column="0" Grid.Row="4" Click="Remove_Button_Click">Remove</Button>
+                <Grid Grid.Column="1" Grid.Row="2" Grid.RowSpan="2" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*">
+                        </RowDefinition>
+                        <RowDefinition Height="*">
+                        </RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Button Style="{DynamicResource RoundButton}" Grid.Row="0" Click="Enable_All_Button_Click">Enable All</Button>
+                    <Button Style="{DynamicResource RoundButton}" Grid.Row="1" Click="Disable_All_Button_Click">Disable All</Button>
+                </Grid>
+
+            </Grid>
+
+            <DataGrid Grid.Column="1" Grid.Row="1"
+                  x:Name="ModItemDataGrid" 
+                  DataContext="{Binding ViewModel}" 
+                  ItemsSource="{Binding ModInfos, Mode=TwoWay, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged}"
+                  SelectedItem="{Binding SelectedMod, Mode=TwoWay}"
+                  SelectedCellsChanged="ModItemDataGrid_SelectedCellsChanged"
+                  AutoGenerateColumns="False"
+                  SelectionMode="Single"
+                  IsReadOnly="False"
+                  CanUserAddRows="False" 
+                  CanUserDeleteRows="False"
+                  CanUserReorderColumns="False"
+                  PreviewTextInput="ModItemDataGrid_PreviewTextInput" Margin="2,0,2,0">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsOverriden}" Value="true">
+                                <Setter Property="Background" Value="Red"></Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsOverriding}" Value="true">
+                                <Setter Property="Background" Value="Green"></Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="X" CanUserSort="False" IsReadOnly="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox Click="Enabled_CheckBox_Clicked" IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Load Order" Binding="{Binding DefaultLoadOrder}" CanUserSort="False" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Display Name" Binding="{Binding DisplayName}" CanUserSort="False" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Author" Binding="{Binding Author}" CanUserSort="False" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Folder" Binding="{Binding FolderNameShort}" CanUserSort="False" IsReadOnly="True"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TabControl Grid.Column="2" Grid.Row="1">
+                <TabItem Header="Presets">
+                    <DockPanel>
+                        <Button Click="Save_Preset_Button_Click" DockPanel.Dock="Top" Style="{StaticResource RoundButton}" Content="Save Preset"/>
+                        <Button Click="Load_Preset_Button_Click" DockPanel.Dock="Top" Style="{StaticResource RoundButton}" Content="Load Preset"/>
+                        <Button Click="Remove_Preset_Button_Click" DockPanel.Dock="Top" Style="{StaticResource RoundButton}" Content="Remove Preset"/>
+                        <ListBox ItemsSource="{Binding PresetNames}" DockPanel.Dock="Top" x:Name="PresetListBox" MinHeight="120" Margin="5,0,5,0"/>
+                    </DockPanel>
+                </TabItem>
+                <TabItem Header="Overriding Info">
+                    <StackPanel MinHeight="100">
+                        <Label Name="SelectedMod" Content="{Binding SelectedModLabel}">
+                        </Label>
+                        <Grid MinHeight="100">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="100"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="*" MaxHeight="110"/>
+                            </Grid.RowDefinitions>
+                            <Label Content="Overriding" Grid.Row="0" Grid.Column="0"/>
+                            <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding SelectedMod.OverridingLabls}" Margin="2,0,2,0" SelectionChanged="Overriding_ListBox_Selected"/>
+                            <Label Grid.Row="0" Grid.Column="1" Content="Overriden By"/>
+                            <ListBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding SelectedMod.OverridenByModsLabels}" Margin="2,0,2,0" SelectionChanged="OverridenBy_ListBox_Selected"/>
+                            <Label Content="Manifest" Grid.Row="2"/>
+                            <ListBox x:Name="ManifestListBox" Grid.Row="3" Grid.ColumnSpan="99" MinHeight="110" Margin="2,0,2,0"/>
+                        </Grid>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Secondary Folders">
+                    <DockPanel>
+                        <Button Click="Remove_Secondary_Folder_Button_Click" DockPanel.Dock="Top" Style="{StaticResource RoundButton}" Content="Remove Selected"/>
+                        <ListBox DockPanel.Dock="Top" x:Name="SecondaryFoldersListBox" ItemsSource="{Binding ModSourcesNames}"/>
+                    </DockPanel>
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </DockPanel>
+
+</Window>
