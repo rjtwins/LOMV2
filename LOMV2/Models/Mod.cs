@@ -1,7 +1,10 @@
 namespace LOM.Models;
-using System.Collections.Generic;
 
-public class Mod
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+
+public class Mod : ICloneable
 {
     public string displayName { get; set; }
     public string version { get; set; }
@@ -16,4 +19,24 @@ public class Mod
     public int? steamLastSubmittedBuildNumber { get; set; }
     public string steamModVisibility { get; set; }
     public bool bEnabled { get; set; } = false;
+
+    public object Clone()
+    {
+        return new Mod()
+        {
+            displayName = displayName,
+            version = version,
+            buildNumber = buildNumber,
+            description = description,
+            author = author,
+            authorURL = authorURL,
+            defaultLoadOrder = defaultLoadOrder,
+            gameVersion = gameVersion,
+            manifest = manifest,
+            steamPublishedFileId = steamPublishedFileId,
+            steamLastSubmittedBuildNumber = steamLastSubmittedBuildNumber,
+            steamModVisibility = steamModVisibility,
+            bEnabled = bEnabled,
+        };
+    }
 }

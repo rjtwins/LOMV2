@@ -1,9 +1,11 @@
 namespace LOM.Models;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 
-public class ModInfo
+public class ModInfo : ICloneable
 {
     public Mod? Mod {get ;set;} = new Mod();
     public string? FolderName {get ;set;}
@@ -51,4 +53,15 @@ public class ModInfo
     [JsonIgnore]
     public string? SteamModVisibility {get => Mod?.steamModVisibility; set => Mod.steamModVisibility = value; }
     #endregion
+
+    public object Clone()
+    {
+        return new ModInfo()
+        {
+            Mod = Mod.Clone() as Mod,
+            FolderName = FolderName,
+            OverridenByMods = OverridenByMods,
+            Overriding = Overriding
+        };
+    }
 }

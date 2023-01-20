@@ -16,7 +16,8 @@ using ListBox = System.Windows.Controls.ListBox;
 using System.IO;
 using System.Text.Json;
 using Microsoft.VisualBasic;
-
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using System.Security.Policy;
 
 namespace LOM;
 /// <summary>
@@ -91,6 +92,11 @@ public partial class MainWindow : Window
         Debug.WriteLine(String.Join("\n", ViewModel.ModInfos.Select(x => $"{x.DisplayName} | {x.DefaultLoadOrder}")));
     }
 
+    private void Info_Click(object sender, RoutedEventArgs e)
+    {
+        Process.Start("explorer", "https://www.nexusmods.com/mechwarrior5mercenaries/mods/174");
+    }
+
     private void MoveSelectedItem(int delta)
     {
         var selectedItem = ModItemDataGrid.SelectedItem as ModInfo;
@@ -106,8 +112,8 @@ public partial class MainWindow : Window
 
         ViewModel.ModInfos.Move(oldIndex, newIndex);
 
-        var mods = SortAndUpdateMods(ViewModel.ModInfos.ToList());
-
+        var mods = UpdateDefaultLoadOrder(ViewModel.ModInfos.ToList());
+        
         UpdateGrid(mods);
 
         ModItemDataGrid.SelectedIndex = newIndex;
@@ -124,15 +130,20 @@ public partial class MainWindow : Window
 
     private List<ModInfo> SortAndUpdateMods(List<ModInfo> mods)
     {
-        mods.OrderBy(x => x.DefaultLoadOrder).ToList();
+        mods = mods.OrderByDescending(x => x.DefaultLoadOrder).ToList();
+        return UpdateDefaultLoadOrder(mods);
+    }
+
+    private List<ModInfo> UpdateDefaultLoadOrder(List<ModInfo> mods)
+    {
         for (int i = 0; i < mods.Count(); i++)
         {
-            mods[i].DefaultLoadOrder = i + 1;
+            mods[i].DefaultLoadOrder = mods.Count() - i;
         }
         return mods;
     }
 
-    private async void Apply(object sender, RoutedEventArgs e)
+    private void Apply(object sender, RoutedEventArgs e)
     {
         //Some checks:
         if (string.IsNullOrEmpty(ViewModel.MainModsFolder))
@@ -141,8 +152,10 @@ public partial class MainWindow : Window
             return;
         }
 
-        _systemIO.WriteModListDotJson(ViewModel.ModInfos.ToList(), ViewModel.MainModsFolder);
-        _systemIO.WriteModsModDotJson(ViewModel.ModInfos.ToList());
+        var mods = ViewModel.ModInfos.ToList().Select(x => x.Clone() as ModInfo).ToList();
+
+        _systemIO.WriteModListDotJson(mods, ViewModel.MainModsFolder);
+        _systemIO.WriteModsModDotJson(mods);
     }
 
     private void RefreshMods()
@@ -232,7 +245,7 @@ public partial class MainWindow : Window
             {
                 modList
                 .Where(mod2 => mod2.Enabled)
-                .Where(mod2 => mod2.DefaultLoadOrder < mod.DefaultLoadOrder)
+                .Where(mod2 => mod2.DefaultLoadOrder > mod.DefaultLoadOrder)
                 .ToList()
                 .ForEach(mod2 =>
                 {
@@ -369,7 +382,7 @@ public partial class MainWindow : Window
         }
         var fileInfo = new FileInfo(files[0]);
 
-        var supportedExtensions = new string[] { ".zip", ".rar" };
+        var supportedExtensions = new string[] { ".zip", ".rar", ".7z" };
 
         if (!supportedExtensions.Contains(fileInfo.Extension))
         {
@@ -377,9 +390,14 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (!_systemIO.UnzipAndInsertDirectory(files[0], ViewModel.MainModsFolder))
+        if (!_systemIO.UnzipAndInsertDirectory(files[0], ViewModel.MainModsFolder, out string extractedFolderName))
         {
             MessageBox.Show($"Failed to extract file.");
+            return;
+        }
+        else
+        {
+            AddSingleMod(ViewModel.MainModsFolder + "\\" + extractedFolderName);
             return;
         }
 
@@ -547,5 +565,17 @@ public partial class MainWindow : Window
         GetOverridingData();
         var mods = ViewModel.ModInfos.ToList();
         UpdateGrid(mods);
+    }
+
+    public void PreviewKeyDown_Key_Down(object sender, KeyEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case Key.Delete:
+                Remove_Button_Click(null, null);
+                break;
+            default:
+                break;
+        }
     }
 }

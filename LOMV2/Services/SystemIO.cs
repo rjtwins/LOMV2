@@ -172,11 +172,13 @@ namespace LOM.Services
             }
         }
 
-        public bool UnzipAndInsertDirectory(string source, string target)
+        public bool UnzipAndInsertDirectory(string source, string target, out string extractedFolderName)
         {
+            extractedFolderName = string.Empty;
             try
             {
                 using ArchiveFile archiveFile = new(source);
+                extractedFolderName = Path.GetDirectoryName(archiveFile?.Entries?.FirstOrDefault(x => x.FileName.Contains("mod.json"))?.FileName) ?? string.Empty;
                 archiveFile.Extract(target, true);
             }
             catch (Exception)

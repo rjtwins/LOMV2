@@ -14,7 +14,7 @@ namespace LOM.Services
         void WriteModsModDotJson(List<ModInfo> modInfos);
         bool RemoveMod(ModInfo mod);
         bool InsertDirectory(string source, string target);
-        bool UnzipAndInsertDirectory(string source, string target);
+        bool UnzipAndInsertDirectory(string source, string target, out string extractedFolderName);
         ModInfo? GetSingleMod(string path);
     }
 }

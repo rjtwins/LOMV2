@@ -21,11 +21,11 @@
             </Style.Resources>
         </Style>
     </Window.Resources>
-    <DockPanel Drop="Window_Drop" AllowDrop="True">
+    <DockPanel Drop="Window_Drop" AllowDrop="True" PreviewKeyDown="PreviewKeyDown_Key_Down">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Select _Main Mods Folder" Click="Select_Main_Mods_Folder"/>
             <MenuItem Header="Add _Secondary Mods Folder" Click="Add_Secondary_Mods_Folder"/>
-            <MenuItem Header="Info"/>
+            <MenuItem Header="Info" Click="Info_Click"/>
         </Menu>
         <StackPanel DockPanel.Dock="Top">
             <StackPanel Orientation="Horizontal">
@@ -120,7 +120,7 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Load Order" Binding="{Binding DefaultLoadOrder}" CanUserSort="False" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Priority" Binding="{Binding DefaultLoadOrder}" CanUserSort="False" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Display Name" Binding="{Binding DisplayName}" CanUserSort="False" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Author" Binding="{Binding Author}" CanUserSort="False" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Folder" Binding="{Binding FolderNameShort}" CanUserSort="False" IsReadOnly="True"/>
