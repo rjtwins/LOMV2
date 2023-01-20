@@ -68,6 +68,8 @@
                     </RowDefinition>
                     <RowDefinition Height="auto">
                     </RowDefinition>
+                    <RowDefinition Height="auto">
+                    </RowDefinition>
                 </Grid.RowDefinitions>
                 <Button Style="{DynamicResource RoundButton}" Grid.Column="0" Grid.ColumnSpan="99" Click="Refresh_Button_Click" >Refresh</Button>
                 <Button Style="{DynamicResource RoundButton}" Grid.Column="0" Grid.Row="1" Click="Upp_Button_Click">Up</Button>
@@ -84,7 +86,8 @@
                     <Button Style="{DynamicResource RoundButton}" Grid.Row="0" Click="Enable_All_Button_Click">Enable All</Button>
                     <Button Style="{DynamicResource RoundButton}" Grid.Row="1" Click="Disable_All_Button_Click">Disable All</Button>
                 </Grid>
-
+                <Label Grid.Row="5" Content="Game Version:"/>
+                <TextBox x:Name="VersionTextBox" Grid.Row="6" Grid.ColumnSpan="1" Text="1.1.328" TextChanged="VersionTextBox_TextChanged"/>
             </Grid>
 
             <DataGrid Grid.Column="1" Grid.Row="1"

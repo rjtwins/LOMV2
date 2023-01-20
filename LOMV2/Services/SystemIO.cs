@@ -55,22 +55,22 @@ namespace LOM.Services
             return mods.First();
         }
 
-        public void WriteModListDotJson(List<ModInfo> modInfos, string path)
+        public void WriteModListDotJson(List<ModInfo> modInfos, string path, string version = "1.1.328")
         {
             if (string.IsNullOrEmpty(path))
                 return;
             if (modInfos == null)
                 return;
 
-            File.WriteAllText(path + "\\modlist.json", GenerateModListJson(modInfos));
+            File.WriteAllText(path + "\\modlist.json", GenerateModListJson(modInfos, version));
         }
 
-        public string GenerateModListJson(List<ModInfo> modInfos)
+        public string GenerateModListJson(List<ModInfo> modInfos, string version)
         {
             if (modInfos == null)
                 return string.Empty;
 
-            string json = "{\"gameVersion\": \"1.1.328\",\"modStatus\":{";
+            string json = "{\"gameVersion\":" + $" \"{version}\"" + ",\"modStatus\":{";
 
             modInfos.ForEach(x => {
                 json += $"\"{x.FolderName.Split("\\").TakeLast(1).ToArray()[0]}\":" + "{" + $"\"bEnabled\":{x.Enabled.ToString().ToLower()}" + "},";

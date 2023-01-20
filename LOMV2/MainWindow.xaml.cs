@@ -152,7 +152,14 @@ public partial class MainWindow : Window
 
         var mods = ViewModel.ModInfos.ToList().Select(x => x.Clone() as ModInfo).ToList();
 
-        _systemIO.WriteModListDotJson(mods, ViewModel.MainModsFolder);
+
+        var version = VersionTextBox.Text;
+        if (string.IsNullOrEmpty(version))
+        {
+            version = "1.1.328";
+        }
+
+        _systemIO.WriteModListDotJson(mods, ViewModel.MainModsFolder, version);
         _systemIO.WriteModsModDotJson(mods);
     }
 
@@ -575,5 +582,10 @@ public partial class MainWindow : Window
             default:
                 break;
         }
+    }
+
+    private void VersionTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+
     }
 }
