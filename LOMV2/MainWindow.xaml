@@ -7,7 +7,7 @@
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
         xmlns:src="clr-namespace:LOM.Converters"
         mc:Ignorable="d"
-        Title="MainWindow" Height="400" Width="1050" MinWidth="1050">
+        Title="MW5 LoadOrderManager II" Height="400" Width="1050" MinWidth="1050">
     <Window.Resources>
         <src:StringBoolDataConverter x:Key="dateConverter"/>
         <Style TargetType="Button" x:Key="RoundButton">
@@ -124,6 +124,7 @@
                     <DataGridTextColumn Header="Display Name" Binding="{Binding DisplayName}" CanUserSort="False" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Author" Binding="{Binding Author}" CanUserSort="False" IsReadOnly="True"/>
                     <DataGridTextColumn Header="Folder" Binding="{Binding FolderNameShort}" CanUserSort="False" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Version" Binding="{Binding Version}" CanUserSort="False" IsReadOnly="True"/>
                 </DataGrid.Columns>
             </DataGrid>
 

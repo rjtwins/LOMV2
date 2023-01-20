@@ -50,10 +50,8 @@ public partial class MainWindow : Window
     private void Select_Main_Mods_Folder(object sender, RoutedEventArgs e)
     {
         string folderPath = PickFolder();
-        if (string.IsNullOrEmpty(folderPath))
-            return;
 
-        ViewModel.MainModsFolder = folderPath;
+        ViewModel.MainModsFolder = folderPath ?? string.Empty;
 
         RefreshMods();
 
