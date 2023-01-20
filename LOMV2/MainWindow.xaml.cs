@@ -128,7 +128,7 @@ public partial class MainWindow : Window
 
     private List<ModInfo> SortAndUpdateMods(List<ModInfo> mods)
     {
-        mods = mods.OrderByDescending(x => x.DefaultLoadOrder).ToList();
+        mods = mods.OrderBy(x => x.DefaultLoadOrder).ToList();
         return UpdateDefaultLoadOrder(mods);
     }
 
@@ -136,7 +136,7 @@ public partial class MainWindow : Window
     {
         for (int i = 0; i < mods.Count(); i++)
         {
-            mods[i].DefaultLoadOrder = mods.Count() - i;
+            mods[i].DefaultLoadOrder = i + 1;
         }
         return mods;
     }
@@ -243,7 +243,7 @@ public partial class MainWindow : Window
             {
                 modList
                 .Where(mod2 => mod2.Enabled)
-                .Where(mod2 => mod2.DefaultLoadOrder > mod.DefaultLoadOrder)
+                .Where(mod2 => mod2.DefaultLoadOrder < mod.DefaultLoadOrder)
                 .ToList()
                 .ForEach(mod2 =>
                 {
