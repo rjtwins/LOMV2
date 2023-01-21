@@ -24,7 +24,7 @@
     <DockPanel Drop="Window_Drop" AllowDrop="True" PreviewKeyDown="PreviewKeyDown_Key_Down">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Select _Main Mods Folder" Click="Select_Main_Mods_Folder"/>
-            <MenuItem Header="Add _Secondary Mods Folder" Click="Add_Secondary_Mods_Folder"/>
+            <MenuItem Header="Open Main Mods Folder" Click="Open_Main_Mods_Folder_Button_Click"/>
             <MenuItem Header="Info" Click="Info_Click"/>
         </Menu>
         <StackPanel Margin="0,0,20,0" DockPanel.Dock="Top" Orientation="Horizontal">
@@ -161,7 +161,11 @@
                 </TabItem>
                 <TabItem Header="Secondary Folders">
                     <DockPanel>
-                        <Button Click="Remove_Secondary_Folder_Button_Click" DockPanel.Dock="Top" Style="{StaticResource RoundButton}" Content="Remove Selected"/>
+                        <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
+                            <Button Click="Add_Secondary_Mods_Folder" Style="{StaticResource RoundButton}" Content="Add"/>
+                            <Button Click="Open_Secondary_Mods_Folder_Button_Click" Style="{StaticResource RoundButton}" Content="Open Selected"/>
+                            <Button Click="Remove_Secondary_Folder_Button_Click" DockPanel.Dock="Left" Style="{StaticResource RoundButton}" Content="Remove Selected"/>
+                        </DockPanel>
                         <ListBox DockPanel.Dock="Top" x:Name="SecondaryFoldersListBox" ItemsSource="{Binding ModSourcesNames}"/>
                     </DockPanel>
                 </TabItem>

@@ -680,4 +680,37 @@ public partial class MainWindow : Window
 
         PersistSystemSettings();
     }
+
+    public void Open_Main_Mods_Folder_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = ViewModel.MainModsFolder;
+        OpenFolder(selected);
+    }
+
+    public void Open_Secondary_Mods_Folder_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = SecondaryFoldersListBox.SelectedItem as string;
+        OpenFolder(selected);
+    }
+
+    private void OpenFolder(string folder)
+    {
+        if (folder == null)
+            return;
+
+        if (!Directory.Exists(folder))
+        {
+            MessageBox.Show($"Folder: {folder} does not exist.");
+        }
+
+        try
+        {
+            Process.Start("explorer.exe", folder);
+        }
+        catch (Exception)
+        {
+            MessageBox.Show($"Could not open folder: {folder}");
+            throw;
+        }
+    }
 }
