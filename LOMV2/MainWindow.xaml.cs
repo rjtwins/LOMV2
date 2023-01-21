@@ -18,6 +18,7 @@ using System.Text.Json;
 using Microsoft.VisualBasic;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using System.Security.Policy;
+using System.Timers;
 
 namespace LOM;
 /// <summary>
@@ -27,6 +28,8 @@ public partial class MainWindow : Window
 {
     public MainWindowViewModel ViewModel { get; set; } = new();
     private ISystemIO _systemIO { get; set; }
+
+    private System.Timers.Timer _resizeTimer = new(100) { Enabled = false };
 
     public MainWindow(ISystemIO systemIO)
     {
@@ -38,6 +41,8 @@ public partial class MainWindow : Window
         ModItemDataGrid.DataContext = ViewModel;
 
         LoadSystemSettings();
+
+        _resizeTimer.Elapsed += ResizeTimerElapsed;
     }
 
     private async void Refresh_Button_Click(object sender, RoutedEventArgs e)
@@ -430,10 +435,20 @@ public partial class MainWindow : Window
     {
         var systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
+        int windowX = 0;
+        int windowY = 0;
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            windowX = (int)this.Width;
+            windowY = (int)this.Height;
+        });
+
         var systemSettings = new SystemSettingsDto() {
             MainModsFolder = ViewModel.MainModsFolder,
             ModSources = ViewModel.ModSources.ToList(),
-            Presets = ViewModel.Presets
+            Presets = ViewModel.Presets,
+            WindowX = ((int?)windowX) ?? 1050,
+            WindowY = ((int?)windowY) ?? 500,
         };
 
         if (!Directory.Exists($"{systemFolder}\\LOMV2"))
@@ -454,6 +469,14 @@ public partial class MainWindow : Window
         ViewModel.ModSources = systemSettings.ModSources.ToHashSet();
         ViewModel.MainModsFolder = systemSettings.MainModsFolder;
         ViewModel.Presets = systemSettings.Presets;
+
+        this.Dispatcher.Invoke(() =>
+        {
+            this.Width = systemSettings.WindowX;
+            this.Height = systemSettings.WindowY;
+        });
+
+
 
         RefreshMods();
     }
@@ -587,5 +610,74 @@ public partial class MainWindow : Window
     private void VersionTextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
 
+    }
+
+    private void FilterTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        //Reset
+        UserControlsGrid.IsEnabled = true;
+        if (ViewModel.FilterActive)
+        {
+            UpdateGrid(ViewModel.BackupModInfos.ToList());
+        }
+
+        var mods = ViewModel.ModInfos.ToList();
+        mods.ForEach(x => x.Highlight = false);
+        UpdateGrid(mods);
+
+        //Do filter stuff
+        var text = FilterTextBox.Text;
+
+        if (string.IsNullOrEmpty(text) || string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+        var filteredMods = new List<ModInfo>();
+
+        if (ViewModel.HightlightChecked)
+        {
+            filteredMods = HightlightFilteredMods(text);
+            UpdateGrid(filteredMods);
+            return;
+        }
+
+        UserControlsGrid.IsEnabled = false;
+        filteredMods = FilterMods(text);
+        UpdateGrid(filteredMods);
+    }
+
+    private List<ModInfo> FilterMods(string text)
+    {
+        ViewModel.BackupModInfos = new ObservableCollection<ModInfo>(ViewModel.ModInfos.ToList());
+        ViewModel.FilterActive = true;
+
+        var filteredMods = ViewModel.ModInfos.ToList();
+        return filteredMods.Where(x => x.DisplayName.ToLower().Contains(text.ToLower()) || x.Author.ToLower().Contains(text.ToLower())).ToList();
+    }
+
+    private List<ModInfo> HightlightFilteredMods(string text)
+    {
+        var filteredMods = ViewModel.ModInfos.ToList();
+        filteredMods.Where(x => x.DisplayName.ToLower().Contains(text.ToLower()) || x.Author.Contains(text.ToLower())).ToList().ForEach(x => x.Highlight = true);
+        filteredMods.Where(x => !(x.DisplayName.ToLower().Contains(text.ToLower()) || x.Author.Contains(text.ToLower()))).ToList().ForEach(x => x.Highlight = false);
+        return filteredMods;
+    }
+
+    private void CheckBox_Click(object sender, RoutedEventArgs e)
+    {
+        FilterTextBox_TextChanged(null, null);
+    }
+
+    private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        _resizeTimer.Stop();
+        _resizeTimer.Start();
+    }
+
+    private void ResizeTimerElapsed(object? sender, ElapsedEventArgs e)
+    {
+        _resizeTimer.Stop();
+
+        PersistSystemSettings();
     }
 }

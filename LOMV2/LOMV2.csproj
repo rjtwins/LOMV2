@@ -9,7 +9,7 @@
     <RootNamespace>LOM</RootNamespace>
     <UseWindowsForms>True</UseWindowsForms>
     <ApplicationIcon>exeIcon2.ico</ApplicationIcon>
-    <Version>0.9.0</Version>
+    <Version>1.2.0</Version>
     <PackageIcon>exeIcon2.png</PackageIcon>
   </PropertyGroup>
 

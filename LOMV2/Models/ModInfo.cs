@@ -26,6 +26,8 @@ public class ModInfo : ICloneable
     public List<string> OverridenByModsLabels => OverridenByMods.Select(x => x.Key.DisplayName).ToList();
     [JsonIgnore]
     public List<string> OverridingLabls => Overriding.Select(x => x.Key.DisplayName).ToList();
+    [JsonIgnore]
+    public bool Highlight { get; set; } = false;
 
     #region acces stuff
     [JsonIgnore]

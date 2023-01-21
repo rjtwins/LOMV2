@@ -14,7 +14,7 @@ namespace LOM.ViewModels
     public class MainWindowViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
-
+        public ObservableCollection<ModInfo> BackupModInfos { get; set; } = new();
         public ObservableCollection<ModInfo> ModInfos { get; set; } = new();
         public Dictionary<string, string> Presets { get; set; } = new();
         public List<string> PresetNames => Presets.Keys.ToList();
@@ -23,6 +23,8 @@ namespace LOM.ViewModels
         public string MainModsFolder { get; set; } = string.Empty;
         public ModInfo? SelectedMod { get; set; }
         public string SelectedModLabel => SelectedMod?.DisplayName ?? string.Empty;
+        public bool HightlightChecked { get; set; } = false;
+        public bool FilterActive { get; internal set; }
 
         // Create the OnPropertyChanged method to raise the event
         // The calling member's name will be used as the parameter.
