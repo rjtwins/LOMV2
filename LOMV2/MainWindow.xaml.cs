@@ -425,6 +425,7 @@ public partial class MainWindow : Window
         }
 
         var mods = ViewModel.ModInfos.ToList();
+        mods.RemoveAll(x => x.FolderName == mod.FolderName);
         mods.Add(mod);
 
         mods = SortAndUpdateMods(mods);

@@ -163,6 +163,8 @@ namespace LOM.Services
         {
             try
             {
+                Directory.Delete(target, true);
+                Directory.CreateDirectory(target);
                 DeepCopy(new DirectoryInfo(source), target);
                 return true;
             }
@@ -179,6 +181,9 @@ namespace LOM.Services
             {
                 using ArchiveFile archiveFile = new(source);
                 extractedFolderName = Path.GetDirectoryName(archiveFile?.Entries?.FirstOrDefault(x => x.FileName.Contains("mod.json"))?.FileName) ?? string.Empty;
+
+                Directory.Delete($"{target}\\{extractedFolderName}", true);
+                Directory.CreateDirectory($"{target}\\{extractedFolderName}");
                 archiveFile.Extract(target, true);
             }
             catch (Exception)
