@@ -1,13 +1,10 @@
 ﻿using LOM.Models;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+using static LOM.Models.Enums;
 
 namespace LOM.ViewModels
 {
@@ -25,6 +22,9 @@ namespace LOM.ViewModels
         public string SelectedModLabel => SelectedMod?.DisplayName ?? string.Empty;
         public bool HightlightChecked { get; set; } = false;
         public bool FilterActive { get; internal set; }
+        public Vender Vender { get; internal set; }
+        public string ExEPath { get; set; } = string.Empty;
+
 
         // Create the OnPropertyChanged method to raise the event
         // The calling member's name will be used as the parameter.

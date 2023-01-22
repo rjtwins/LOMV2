@@ -1,6 +1,5 @@
 ﻿using LOM.Models;
 using LOM.ViewModels;
-using System.Windows.Forms;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,10 +14,9 @@ using System.Diagnostics;
 using ListBox = System.Windows.Controls.ListBox;
 using System.IO;
 using System.Text.Json;
-using Microsoft.VisualBasic;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using System.Security.Policy;
 using System.Timers;
+using Window = System.Windows.Window;
 
 namespace LOM;
 /// <summary>
@@ -116,7 +114,7 @@ public partial class MainWindow : Window
         ViewModel.ModInfos.Move(oldIndex, newIndex);
 
         var mods = UpdateDefaultLoadOrder(ViewModel.ModInfos.ToList());
-        
+
         UpdateGrid(mods);
 
         ModItemDataGrid.SelectedIndex = newIndex;
@@ -450,6 +448,8 @@ public partial class MainWindow : Window
             Presets = ViewModel.Presets,
             WindowX = ((int?)windowX) ?? 1050,
             WindowY = ((int?)windowY) ?? 500,
+            Vender = ViewModel.Vender,
+            ExEPath = ViewModel.ExEPath,
         };
 
         if (!Directory.Exists($"{systemFolder}\\LOMV2"))
@@ -470,6 +470,8 @@ public partial class MainWindow : Window
         ViewModel.ModSources = systemSettings.ModSources.ToHashSet();
         ViewModel.MainModsFolder = systemSettings.MainModsFolder;
         ViewModel.Presets = systemSettings.Presets;
+        ViewModel.Vender = systemSettings.Vender;
+        ViewModel.ExEPath = systemSettings.ExEPath;
 
         this.Dispatcher.Invoke(() =>
         {
@@ -477,7 +479,25 @@ public partial class MainWindow : Window
             this.Height = systemSettings.WindowY;
         });
 
-
+        switch (ViewModel.Vender)
+        {
+            case Enums.Vender.None:
+                break;
+            case Enums.Vender.Steam:
+                SteamVenderMenuItem.Header = "Steam - X";
+                break;
+            case Enums.Vender.Epic:
+                EpicVenderMenuItem.Header = "Epic - X";
+                break;
+            case Enums.Vender.WindowsStore:
+                WindowsStoreVenderMenuItem.Header = "Windows - X";
+                break;
+            case Enums.Vender.Other:
+                OtherVenderMenuItem.Header = "Other - X";
+                break;
+            default:
+                break;
+        }
 
         RefreshMods();
     }
@@ -574,7 +594,7 @@ public partial class MainWindow : Window
     public void Remove_Secondary_Folder_Button_Click(Object sender, RoutedEventArgs e)
     {
         var selected = SecondaryFoldersListBox.SelectedItem as string;
-        if (selected == null) 
+        if (selected == null)
             return;
 
         var mods = ViewModel.ModInfos.ToList();
@@ -712,6 +732,161 @@ public partial class MainWindow : Window
         {
             MessageBox.Show($"Could not open folder: {folder}");
             throw;
+        }
+    }
+
+    public void Steam_Vender_Menu_Item_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.Vender = Enums.Vender.Steam;
+        ViewModel.ExEPath = string.Empty;
+        ResetMenuItemHeaders();
+        SteamVenderMenuItem.Header = "Steam - X";
+        PersistSystemSettings();
+    }
+
+    public void Epic_Vender_Menu_Item_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.Vender = Enums.Vender.Epic;
+        ViewModel.ExEPath = string.Empty;
+        ResetMenuItemHeaders();
+        EpicVenderMenuItem.Header = "Epic - X";
+        PersistSystemSettings();
+    }
+
+    public void WindowsStore_Vender_Menu_Item_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.Vender = Enums.Vender.WindowsStore;
+        ViewModel.ExEPath = string.Empty;
+        ResetMenuItemHeaders();
+        WindowsStoreVenderMenuItem.Header = "Windows Store - X";
+        PersistSystemSettings();
+    }
+
+    public void Other_Vender_Menu_Item_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.Vender = Enums.Vender.Other;
+        string filePath = PickFile();
+        ResetMenuItemHeaders();
+        ViewModel.ExEPath = filePath;
+        OtherVenderMenuItem.Header = "Other - X";
+        PersistSystemSettings();
+    }
+
+    private void ResetMenuItemHeaders()
+    {
+        SteamVenderMenuItem.Header = "Steam";
+        EpicVenderMenuItem.Header = "Epic";
+        OtherVenderMenuItem.Header = "Other";
+        WindowsStoreVenderMenuItem.Header = "Windows Store";
+    }
+
+    private string PickFile()
+    {
+        using var dialog = new System.Windows.Forms.OpenFileDialog();
+        dialog.Multiselect = false;
+        dialog.Filter = "(.exe)|*.exe";
+        dialog.CheckFileExists = true;
+        dialog.CheckPathExists = true;
+        dialog.DefaultExt = ".exe";
+
+        System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+        if (result != System.Windows.Forms.DialogResult.OK)
+            return "";
+        return dialog.FileName;
+    }
+
+    private void LaunchEPIC()
+    {
+        try
+        {
+            Process cmd = new Process();
+            cmd.StartInfo.FileName = "cmd.exe";
+            cmd.StartInfo.RedirectStandardInput = true;
+            cmd.StartInfo.RedirectStandardOutput = true;
+            cmd.StartInfo.CreateNoWindow = true;
+            cmd.StartInfo.UseShellExecute = false;
+            cmd.Start();
+
+            cmd.StandardInput.WriteLine(@"start com.epicgames.launcher://apps/Hoopoe?action=launch&silent=true");
+            cmd.StandardInput.Flush();
+            cmd.StandardInput.Close();
+            cmd.WaitForExit();
+        }
+        catch (Exception)
+        {
+            MessageBox.Show("Launching via Epic Launcher failed.");
+        }
+    }
+
+    private void LaunchSteam()
+    {
+        try
+        {
+
+            Process.Start("explorer", @"steam://rungameid/784080");
+        }
+        catch (Exception)
+        {
+            MessageBox.Show("Launching via steam failed.");
+        }
+    }
+
+    private void LaunchGameOther()
+    {
+        if(string.IsNullOrEmpty(ViewModel.ExEPath) || string.IsNullOrWhiteSpace(ViewModel.ExEPath))
+            return;
+        try
+        {
+            Process.Start(ViewModel.ExEPath);
+        }
+        catch (Exception)
+        {
+            MessageBox.Show($"Launching {ViewModel.ExEPath} failed.");
+        }
+    }
+
+    private void LaunchWindowsStore()
+    {
+        Process cmd = new Process();
+        cmd.StartInfo.FileName = "cmd.exe";
+        cmd.StartInfo.RedirectStandardInput = true;
+        cmd.StartInfo.RedirectStandardOutput = true;
+        cmd.StartInfo.CreateNoWindow = true;
+        cmd.StartInfo.UseShellExecute = false;
+        cmd.Start();
+
+        cmd.StandardInput.WriteLine(@"explorer.exe shell:appsFolder\PiranhaGamesInc.MechWarrior5Mercenaries_skpx0jhaqqap2!9PB86W3JK8Z5");
+        cmd.StandardInput.Flush();
+        cmd.StandardInput.Close();
+        cmd.WaitForExit();
+    }
+
+    public void Start_Game_Button_Click(object sender, EventArgs e)
+    {
+        switch (ViewModel.Vender)
+        {
+            case Enums.Vender.None:
+                MessageBox.Show("Please select a vendor first.");
+                break;
+            case Enums.Vender.Steam:
+                LaunchSteam();
+                break;
+            case Enums.Vender.Epic:
+                LaunchEPIC();
+                break;
+            case Enums.Vender.Other:
+                if(string.IsNullOrEmpty(ViewModel.ExEPath) || string.IsNullOrWhiteSpace(ViewModel.ExEPath))
+                {
+                    MessageBox.Show("Path to MW5 exe was not set, please select a path by selecting \"Other\" as vender.");
+                    return;
+                }
+                LaunchGameOther();
+                break;
+            case Enums.Vender.WindowsStore:
+                LaunchWindowsStore();
+                break;
+            default:
+                break;
         }
     }
 }

@@ -7,7 +7,7 @@
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
         xmlns:src="clr-namespace:LOM.Converters"
         mc:Ignorable="d"
-        Title="MW5 LoadOrderManager II" Height="500" Width="1050" MinWidth="1050" SizeChanged="Window_SizeChanged">
+        Title="MW5 LoadOrderManager II" MinHeight="550" MinWidth="1050" SizeChanged="Window_SizeChanged">
     <Window.Resources>
         <src:StringBoolDataConverter x:Key="dateConverter"/>
         <Style TargetType="Button" x:Key="RoundButton">
@@ -25,6 +25,12 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Select _Main Mods Folder" Click="Select_Main_Mods_Folder"/>
             <MenuItem Header="Open Main Mods Folder" Click="Open_Main_Mods_Folder_Button_Click"/>
+            <MenuItem Header="Select Vendor">
+                <MenuItem Click="Steam_Vender_Menu_Item_Click" x:Name="SteamVenderMenuItem" Header="Steam"/>
+                <MenuItem Click="Epic_Vender_Menu_Item_Click" x:Name="EpicVenderMenuItem" Header="Epic"/>
+                <MenuItem Click="WindowsStore_Vender_Menu_Item_Click" x:Name="WindowsStoreVenderMenuItem" Header="Windows Store"/>
+                <MenuItem Click="Other_Vender_Menu_Item_Click" x:Name="OtherVenderMenuItem" Header="Other"/>
+            </MenuItem>
             <MenuItem Header="Info" Click="Info_Click"/>
         </Menu>
         <StackPanel Margin="0,0,20,0" DockPanel.Dock="Top" Orientation="Horizontal">
@@ -71,6 +77,8 @@
                     </RowDefinition>
                     <RowDefinition Height="auto">
                     </RowDefinition>
+                    <RowDefinition Height="auto">
+                    </RowDefinition>
                     <RowDefinition Height="*">
                     </RowDefinition>
                 </Grid.RowDefinitions>
@@ -83,8 +91,10 @@
                 <Button Style="{DynamicResource RoundButton}" Grid.Column="1" Grid.Row="3" Click="Disable_All_Button_Click">Disable All</Button>
                 <Label Grid.Row="5" Grid.ColumnSpan="99" Content="Game Version:"/>
                 <TextBox x:Name="VersionTextBox" Grid.Row="6" MaxHeight="20" Grid.ColumnSpan="2" Text="1.1.328" TextChanged="VersionTextBox_TextChanged" VerticalAlignment="Top"/>
+                <Button Click="Start_Game_Button_Click" Style="{StaticResource RoundButton}" Grid.ColumnSpan="2" Grid.Row="7" MinHeight="130" MinWidth="130" MaxHeight="130" MaxWidth="130" VerticalAlignment="Bottom" Margin="0,0,0,5">
+                    Start Game
+                </Button>
             </Grid>
-
             <DataGrid Grid.Column="1" Grid.Row="1"
                   x:Name="ModItemDataGrid" 
                   DataContext="{Binding ViewModel}" 
@@ -128,7 +138,6 @@
                     <DataGridTextColumn Header="Version" Binding="{Binding Version}" CanUserSort="False" IsReadOnly="True"/>
                 </DataGrid.Columns>
             </DataGrid>
-
             <TabControl Grid.Column="2" Grid.Row="1">
                 <TabItem Header="Presets">
                     <DockPanel>
@@ -172,5 +181,4 @@
             </TabControl>
         </Grid>
     </DockPanel>
-
 </Window>
