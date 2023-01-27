@@ -17,5 +17,6 @@ namespace LOM.Models
         public int WindowY { get; set; } = 500;
         public Vender Vender { get; set; } = Vender.None;
         public string ExEPath { get; set; } = string.Empty;
+        public string GameVersion { get; set; } = "1.1.335";
     }
 }

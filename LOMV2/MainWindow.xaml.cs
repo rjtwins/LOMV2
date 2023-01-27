@@ -450,6 +450,7 @@ public partial class MainWindow : Window
             WindowY = ((int?)windowY) ?? 500,
             Vender = ViewModel.Vender,
             ExEPath = ViewModel.ExEPath,
+            GameVersion = this.VersionTextBox.Text,
         };
 
         if (!Directory.Exists($"{systemFolder}\\LOMV2"))
@@ -465,40 +466,47 @@ public partial class MainWindow : Window
         if (!File.Exists($"{systemFolder}\\LOMV2\\settings.json"))
             return;
 
-        var systemSettingsJson = File.ReadAllText($"{systemFolder}\\LOMV2\\settings.json");
-        SystemSettingsDto systemSettings = JsonSerializer.Deserialize<SystemSettingsDto>(systemSettingsJson);
-        ViewModel.ModSources = systemSettings.ModSources.ToHashSet();
-        ViewModel.MainModsFolder = systemSettings.MainModsFolder;
-        ViewModel.Presets = systemSettings.Presets;
-        ViewModel.Vender = systemSettings.Vender;
-        ViewModel.ExEPath = systemSettings.ExEPath;
-
-        this.Dispatcher.Invoke(() =>
+        try
         {
-            this.Width = systemSettings.WindowX;
-            this.Height = systemSettings.WindowY;
-        });
+            var systemSettingsJson = File.ReadAllText($"{systemFolder}\\LOMV2\\settings.json");
+            SystemSettingsDto systemSettings = JsonSerializer.Deserialize<SystemSettingsDto>(systemSettingsJson);
+            ViewModel.ModSources = systemSettings.ModSources.ToHashSet();
+            ViewModel.MainModsFolder = systemSettings.MainModsFolder;
+            ViewModel.Presets = systemSettings.Presets;
+            ViewModel.Vender = systemSettings.Vender;
+            ViewModel.ExEPath = systemSettings.ExEPath;
 
-        switch (ViewModel.Vender)
-        {
-            case Enums.Vender.None:
-                break;
-            case Enums.Vender.Steam:
-                SteamVenderMenuItem.Header = "Steam - X";
-                break;
-            case Enums.Vender.Epic:
-                EpicVenderMenuItem.Header = "Epic - X";
-                break;
-            case Enums.Vender.WindowsStore:
-                WindowsStoreVenderMenuItem.Header = "Windows - X";
-                break;
-            case Enums.Vender.Other:
-                OtherVenderMenuItem.Header = "Other - X";
-                break;
-            default:
-                break;
+            this.Dispatcher.Invoke(() =>
+            {
+                this.Width = systemSettings.WindowX;
+                this.Height = systemSettings.WindowY;
+                this.VersionTextBox.Text = systemSettings.GameVersion;
+            });
+
+            switch (ViewModel.Vender)
+            {
+                case Enums.Vender.None:
+                    break;
+                case Enums.Vender.Steam:
+                    SteamVenderMenuItem.Header = "Steam - X";
+                    break;
+                case Enums.Vender.Epic:
+                    EpicVenderMenuItem.Header = "Epic - X";
+                    break;
+                case Enums.Vender.WindowsStore:
+                    WindowsStoreVenderMenuItem.Header = "Windows - X";
+                    break;
+                case Enums.Vender.Other:
+                    OtherVenderMenuItem.Header = "Other - X";
+                    break;
+                default:
+                    break;
+            }
         }
+        catch (Exception)
+        {
 
+        }
         RefreshMods();
     }
 
