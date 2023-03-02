@@ -222,6 +222,12 @@ public partial class MainWindow : Window
         _systemIO.WriteModsModDotJson(mods);
     }
 
+    private void ApplyAndStart(object sender, RoutedEventArgs e)
+    {
+        Apply(sender, e);
+        Start_Game_Button_Click(sender, e);
+    }
+
     private void RefreshMods()
     {
         var mods = GenerateModListFromMainPath(ViewModel.MainModsFolder);

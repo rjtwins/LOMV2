@@ -79,6 +79,10 @@
                     </RowDefinition>
                     <RowDefinition Height="auto">
                     </RowDefinition>
+                    <RowDefinition Height="auto">
+                    </RowDefinition>
+                    <RowDefinition Height="auto">
+                    </RowDefinition>
                     <RowDefinition Height="*">
                     </RowDefinition>
                 </Grid.RowDefinitions>
@@ -90,10 +94,11 @@
                 <Button Style="{DynamicResource RoundButton}" Grid.Column="1" Grid.Row="1" Click="Remove_Button_Click">Remove</Button>
                 <Button Style="{DynamicResource RoundButton}" Grid.Column="1" Grid.Row="2" Click="Enable_All_Button_Click">Enable All</Button>
                 <Button Style="{DynamicResource RoundButton}" Grid.Column="1" Grid.Row="3" Click="Disable_All_Button_Click">Disable All</Button>
-                <Button Style="{DynamicResource RoundButton}" Grid.Column="1" Grid.Row="4" Click="Apply">Apply</Button>
                 <Label Grid.Row="5" Grid.ColumnSpan="99" Content="Game Version:"/>
                 <TextBox x:Name="VersionTextBox" Grid.Row="6" MaxHeight="20" Grid.ColumnSpan="2" TextChanged="VersionTextBox_TextChanged" VerticalAlignment="Top"/>
-                <Button Click="Start_Game_Button_Click" Style="{StaticResource RoundButton}" Grid.ColumnSpan="2" Grid.Row="7" MinHeight="130" MinWidth="130" MaxHeight="130" MaxWidth="130" VerticalAlignment="Bottom" Margin="0,0,0,5">
+                <Button Style="{DynamicResource RoundButton}" Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2" Click="Apply">Apply</Button>
+                <Button Style="{DynamicResource RoundButton}" Grid.Column="0" Grid.Row="8" Grid.ColumnSpan="2" Click="ApplyAndStart">Apply and Start Game</Button>
+                <Button Click="Start_Game_Button_Click" Style="{StaticResource RoundButton}" Grid.ColumnSpan="2" Grid.Row="9" MinHeight="130" MinWidth="130" MaxHeight="130" MaxWidth="130" VerticalAlignment="Bottom" Margin="0,0,0,5">
                     Start Game
                 </Button>
             </Grid>
