@@ -55,7 +55,7 @@ namespace LOM.Services
             return mods.First();
         }
 
-        public void WriteModListDotJson(List<ModInfo> modInfos, string path, string version = "1.1.328")
+        public void WriteModListDotJson(List<ModInfo> modInfos, string path, string version = Constants.DefaultVersion)
         {
             if (string.IsNullOrEmpty(path))
                 return;
