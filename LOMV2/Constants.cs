@@ -2,6 +2,6 @@
 {
     public static class Constants
     {
-        public const string DefaultVersion = "1.1.335";
+        public const string DefaultVersion = "1.1.338";
     }
 }
