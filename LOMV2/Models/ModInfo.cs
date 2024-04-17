@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 public class ModInfo : ICloneable
 {
     public Mod? Mod {get ;set;} = new Mod();
-    public string? FolderName {get ;set;}
+    public string? FolderName {get ;set; }
 
     [JsonIgnore]
     public string? FolderNameShort { get => FolderName.Split("\\").TakeLast(1).First(); }

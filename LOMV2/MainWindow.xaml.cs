@@ -27,6 +27,8 @@ public partial class MainWindow : Window
     public MainWindowViewModel ViewModel { get; set; } = new();
     private ISystemIO _systemIO { get; set; }
 
+    private bool _updatingCell = false;
+
     private System.Timers.Timer _resizeTimer = new(100) { Enabled = false };
 
     public MainWindow(ISystemIO systemIO)
@@ -38,6 +40,7 @@ public partial class MainWindow : Window
 
         ModItemDataGrid.DataContext = ViewModel;
 
+        this.VersionTextBox.Text = Constants.DefaultVersion;
         LoadSystemSettings();
 
         _resizeTimer.Elapsed += ResizeTimerElapsed;
@@ -78,17 +81,70 @@ public partial class MainWindow : Window
         Debug.WriteLine(String.Join("\n", ViewModel.ModInfos.Select(x => $"{x.DisplayName} | {x.DefaultLoadOrder}")));
     }
 
-    private async void Upp_Button_Click(object sender, RoutedEventArgs e)
+    private async void Up_Button_Click(object sender, RoutedEventArgs e)
     {
         MoveSelectedItem(-1);
 
         Debug.WriteLine(String.Join("\n", ViewModel.ModInfos.Select(x => $"{x.DisplayName} | {x.DefaultLoadOrder}")));
+    }
 
+    private async void UpFive_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var delta = -5;
+        if (ModItemDataGrid.SelectedIndex + delta < 1)
+        {
+            delta = -ModItemDataGrid.SelectedIndex;
+        }
+
+        MoveSelectedItem(delta);
+
+        Debug.WriteLine(String.Join("\n", ViewModel.ModInfos.Select(x => $"{x.DisplayName} | {x.DefaultLoadOrder}")));
+    }
+
+    private async void DownFive_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var delta = 5;
+        if (ModItemDataGrid.SelectedIndex + delta >= this.ModItemDataGrid.Items.Count)
+        {
+            delta = ModItemDataGrid.Items.Count - ModItemDataGrid.SelectedIndex - 1;
+        }
+
+        MoveSelectedItem(delta);
+
+        Debug.WriteLine(String.Join("\n", ViewModel.ModInfos.Select(x => $"{x.DisplayName} | {x.DefaultLoadOrder}")));
     }
 
     private async void Down_Button_Click(object sender, RoutedEventArgs e)
     {
         MoveSelectedItem(1);
+
+        Debug.WriteLine(String.Join("\n", ViewModel.ModInfos.Select(x => $"{x.DisplayName} | {x.DefaultLoadOrder}")));
+    }
+
+    private async void ToTop_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedItem = ModItemDataGrid.SelectedItem as ModInfo;
+
+        if (selectedItem == null)
+            return;
+
+        var oldIndex = ViewModel.ModInfos.IndexOf(selectedItem);
+
+        MoveSelectedItem(-oldIndex);
+
+        Debug.WriteLine(String.Join("\n", ViewModel.ModInfos.Select(x => $"{x.DisplayName} | {x.DefaultLoadOrder}")));
+    }
+
+    private async void ToBottom_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedItem = ModItemDataGrid.SelectedItem as ModInfo;
+
+        if (selectedItem == null)
+            return;
+
+        var oldIndex = ViewModel.ModInfos.IndexOf(selectedItem);
+
+        MoveSelectedItem(ModItemDataGrid.Items.Count - oldIndex - 1);
 
         Debug.WriteLine(String.Join("\n", ViewModel.ModInfos.Select(x => $"{x.DisplayName} | {x.DefaultLoadOrder}")));
     }
@@ -159,11 +215,17 @@ public partial class MainWindow : Window
         var version = VersionTextBox.Text;
         if (string.IsNullOrEmpty(version))
         {
-            version = "1.1.328";
+            version = Constants.DefaultVersion;
         }
 
         _systemIO.WriteModListDotJson(mods, ViewModel.MainModsFolder, version);
         _systemIO.WriteModsModDotJson(mods);
+    }
+
+    private void ApplyAndStart(object sender, RoutedEventArgs e)
+    {
+        Apply(sender, e);
+        Start_Game_Button_Click(sender, e);
     }
 
     private void RefreshMods()
@@ -288,8 +350,41 @@ public partial class MainWindow : Window
 
     private void ModItemDataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
     {
-        ViewModel.OnPropertyChanged(nameof(ViewModel.SelectedModLabel));
-        ViewModel.OnPropertyChanged(nameof(ViewModel.SelectedMod));
+        if (!this._updatingCell)
+        {
+            _updatingCell = true;
+            ViewModel.OnPropertyChanged(nameof(ViewModel.SelectedModLabel));
+            ViewModel.OnPropertyChanged(nameof(ViewModel.SelectedMod));
+
+            // Spaghetti code to detect mods that are out of order...can't rely on the current selected item always...
+            for (var i = 0; i < this.ModItemDataGrid.Items.Count; i++)
+            {
+                var item = this.ModItemDataGrid.Items[i] as ModInfo;
+                var index = Convert.ToInt32(item.DefaultLoadOrder);
+                var currentIndex = i + 1;
+
+                if (index != currentIndex)
+                {
+                    if (index < 1)
+                    {
+                        index = 1;
+                    }
+                    else if (index > this.ModItemDataGrid.Items.Count)
+                    {
+                        index = this.ModItemDataGrid.Items.Count;
+                    }
+
+                    var deltaIndex = index - currentIndex;
+
+                    this.ModItemDataGrid.SelectedIndex = currentIndex - 1;
+                    item.DefaultLoadOrder = currentIndex;
+                    MoveSelectedItem(deltaIndex);
+                    break;
+                }
+            }
+
+            _updatingCell = false;
+        }
     }
 
     private void Overriding_ListBox_Selected(object sender, SelectionChangedEventArgs e)
@@ -432,8 +527,6 @@ public partial class MainWindow : Window
 
     private void PersistSystemSettings()
     {
-        var systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-
         int windowX = 0;
         int windowY = 0;
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
@@ -442,39 +535,59 @@ public partial class MainWindow : Window
             windowY = (int)this.Height;
         });
 
-        var systemSettings = new SystemSettingsDto() {
-            MainModsFolder = ViewModel.MainModsFolder,
-            ModSources = ViewModel.ModSources.ToList(),
-            Presets = ViewModel.Presets,
-            WindowX = ((int?)windowX) ?? 1050,
-            WindowY = ((int?)windowY) ?? 500,
-            Vender = ViewModel.Vender,
-            ExEPath = ViewModel.ExEPath,
-            GameVersion = this.VersionTextBox.Text,
-        };
-
-        if (!Directory.Exists($"{systemFolder}\\LOMV2"))
-            Directory.CreateDirectory($"{systemFolder}\\LOMV2");
-
-        File.WriteAllText($"{systemFolder}\\LOMV2\\settings.json", JsonSerializer.Serialize(systemSettings));
+        this.Dispatcher.Invoke(() =>
+        {
+            var systemSettings = new SystemSettingsDto()
+                                 {
+                                     MainModsFolder = ViewModel.MainModsFolder,
+                                     ModSources = ViewModel.ModSources.ToList(),
+                                     WindowX = ((int?)windowX) ?? 1050,
+                                     WindowY = ((int?)windowY) ?? 500,
+                                     Vender = ViewModel.Vender,
+                                     ExEPath = ViewModel.ExEPath,
+                                     GameVersion = this.VersionTextBox.Text,
+                                 };
+            
+            if (!Directory.Exists(LoadOrderManagerFolder))
+                Directory.CreateDirectory(LoadOrderManagerFolder);
+            
+            File.WriteAllText(Path.Combine(LoadOrderManagerFolder, "settings.json"), JsonSerializer.Serialize(systemSettings));
+            
+            // recursively write each preset to its own file to make sharing easier
+            foreach (var preset in ViewModel.Presets)
+            {
+                File.WriteAllText(Path.Combine(LoadOrderManagerFolder, $"{preset.Key}.txt"), preset.Value);
+            }
+        });
     }
+
+    public string LoadOrderManagerFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "LOMV2");
 
     private void LoadSystemSettings()
     {
-        var systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var settingsFile = Path.Combine(LoadOrderManagerFolder, "settings.json");
 
-        if (!File.Exists($"{systemFolder}\\LOMV2\\settings.json"))
+        if (!File.Exists(settingsFile))
             return;
 
         try
         {
-            var systemSettingsJson = File.ReadAllText($"{systemFolder}\\LOMV2\\settings.json");
+            var systemSettingsJson = File.ReadAllText(settingsFile);
             SystemSettingsDto systemSettings = JsonSerializer.Deserialize<SystemSettingsDto>(systemSettingsJson);
             ViewModel.ModSources = systemSettings.ModSources.ToHashSet();
             ViewModel.MainModsFolder = systemSettings.MainModsFolder;
-            ViewModel.Presets = systemSettings.Presets;
             ViewModel.Vender = systemSettings.Vender;
             ViewModel.ExEPath = systemSettings.ExEPath;
+            ViewModel.Presets = systemSettings.Presets; // kept for backwards compatibility
+            foreach (var file in Directory.GetFiles(LoadOrderManagerFolder))
+            {
+                // any file aside from the settings file is a preset
+                if (file != settingsFile)
+                {
+                    var presetName = Path.GetFileNameWithoutExtension(file);
+                    ViewModel.Presets.Add(presetName, File.ReadAllText(file));
+                }
+            }
 
             this.Dispatcher.Invoke(() =>
             {
@@ -510,13 +623,13 @@ public partial class MainWindow : Window
         RefreshMods();
     }
 
-    private void SavePreset(string presetName)
+    private void SavePreset(string presetName, string presetValue = "")
     {
         if (ViewModel.Presets.ContainsKey(presetName))
             if (MessageBox.Show($"Preset name {presetName} allready in use,\ndo you want to override?", "", MessageBoxButton.YesNo) == MessageBoxResult.No)
                 return;
-
-        ViewModel.Presets[presetName] = JsonSerializer.Serialize(ViewModel.ModInfos.ToArray());
+        
+        ViewModel.Presets[presetName] = string.IsNullOrWhiteSpace(presetValue) ? GetPresetStringForCurrentMods() : presetValue;
 
         ViewModel.OnPropertyChanged(nameof(ViewModel.Presets));
         ViewModel.OnPropertyChanged(nameof(ViewModel.PresetNames));
@@ -524,12 +637,21 @@ public partial class MainWindow : Window
         PersistSystemSettings();
     }
 
+    private string GetPresetStringForCurrentMods()
+    {
+        var modInfos = ViewModel.ModInfos.ToArray();
+
+        var presetKeys = modInfos.Select(x => new PresetModInfo(x.DisplayName, x.Author, x.FolderNameShort, x.Enabled, x.DefaultLoadOrder)).ToArray();
+
+        return JsonSerializer.Serialize(presetKeys);
+    }
+
     private void LoadPreset(string presetName)
     {
         if (!ViewModel.Presets.TryGetValue(presetName, out string presetJson))
             return;
 
-        var presetMods = JsonSerializer.Deserialize<List<ModInfo>>(presetJson);
+        var presetMods = JsonSerializer.Deserialize<List<PresetModInfo>>(presetJson);
 
         if (presetMods == null)
             return;
@@ -541,7 +663,7 @@ public partial class MainWindow : Window
         {
             var match = presetMods.FirstOrDefault(presetMod => presetMod.DisplayName == mod.DisplayName &&
                 presetMod.Author == mod.Author &&
-                presetMod.FolderNameShort == mod.FolderNameShort);
+                presetMod.FolderShort == mod.FolderNameShort);
 
             if (match == null)
             {
@@ -550,7 +672,7 @@ public partial class MainWindow : Window
             }
 
             mod.Enabled = match.Enabled;
-            mod.DefaultLoadOrder = match.DefaultLoadOrder;
+            mod.DefaultLoadOrder = match.LoadOrder;
         });
 
         mods = SortAndUpdateMods(mods);
@@ -560,6 +682,10 @@ public partial class MainWindow : Window
     private void RemovePreset(string presetName)
     {
         ViewModel.Presets.Remove(presetName);
+        if (File.Exists(Path.Combine(LoadOrderManagerFolder, $"{presetName}.txt")))
+        {
+            File.Delete(Path.Combine(LoadOrderManagerFolder, $"{presetName}.txt"));
+        }
         PersistSystemSettings();
 
         ViewModel.OnPropertyChanged(nameof(ViewModel.Presets));
@@ -597,6 +723,34 @@ public partial class MainWindow : Window
             return;
 
         RemovePreset(selectedPreset);
+    }
+
+    public void Copy_Preset_To_Clipboard_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedPreset = PresetListBox.SelectedItem as string;
+        if (selectedPreset == null)
+            return;
+
+        Clipboard.SetText($"{selectedPreset}:{GetPresetStringForCurrentMods()}");
+    }
+
+    public void Paste_Preset_From_Clipboard_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var clipboardValue = Clipboard.GetText();
+        if (!string.IsNullOrEmpty(clipboardValue))
+        {
+            try
+            {
+                var presetText = clipboardValue.Split(":", 2);
+
+                SavePreset(presetText[0], presetText[1]);
+                LoadPreset(presetText[0]);
+            }
+            catch (Exception _)
+            {
+                // swallow the failure for now
+            }
+        }
     }
 
     public void Remove_Secondary_Folder_Button_Click(Object sender, RoutedEventArgs e)
